@@ -2,25 +2,35 @@
 REM VS Code Setup with SharePoint Authentication
 REM Configure these variables for your environment
 
-set "siteUrl=https://yourtenant.sharepoint.com/sites/yoursite"
-set "scriptPath=Shared Documents/Scripts/InitialiseVSCodeFolders.ps1"
-set "localScript=%TEMP%\InitialiseVSCodeFolders.ps1"
+set "siteUrl=https://supportpartners.sharepoint.com/sites/Support"
+set "scriptPath=Shared Documents/General/Scripts/InitialiseVSCodeFolders_Enhanced.ps1"
+set "localScript=%TEMP%\InitialiseVSCodeFolders_Enhanced.ps1"
+set "directDownloadUrl=https://supportpartners.sharepoint.com/sites/Support/_layouts/15/download.aspx?SourceUrl=/sites/Support/Shared%20Documents/General/Scripts/InitialiseVSCodeFolders_Enhanced.ps1"
 
 REM Download and execute script using PowerShell with SharePoint authentication
 powershell.exe -ExecutionPolicy Bypass -Command ^
 "try { ^
-    Import-Module SharePointPnPPowerShellOnline -ErrorAction SilentlyContinue; ^
-    if (Get-Module -Name SharePointPnPPowerShellOnline) { ^
-        Connect-PnPOnline -Url '%siteUrl%' -UseWebLogin; ^
-        Get-PnPFile -Url '%scriptPath%' -Path '%TEMP%' -Filename 'InitialiseVSCodeFolders.ps1' -AsFile; ^
-    } else { ^
-        $url = '%siteUrl%/_layouts/15/download.aspx?SourceUrl=/%scriptPath%'; ^
-        Invoke-WebRequest -Uri $url -OutFile '%localScript%' -UseDefaultCredentials; ^
-    } ^
+    Write-Host 'Downloading VS Code setup script from SharePoint...'; ^
+    $directUrl = '%directDownloadUrl%'; ^
+    $localPath = '%localScript%'; ^
+    Invoke-WebRequest -Uri $directUrl -OutFile $localPath -UseDefaultCredentials; ^
+    Write-Host 'Script downloaded successfully'; ^
 } catch { ^
-    Write-Host 'Authentication method failed, trying direct download...'; ^
-    $directUrl = '%siteUrl%/%scriptPath%'; ^
-    Invoke-WebRequest -Uri $directUrl -OutFile '%localScript%' -UseDefaultCredentials; ^
+    Write-Host 'Direct download failed, trying alternative method...'; ^
+    try { ^
+        Import-Module SharePointPnPPowerShellOnline -ErrorAction SilentlyContinue; ^
+        if (Get-Module -Name SharePointPnPPowerShellOnline) { ^
+            Connect-PnPOnline -Url '%siteUrl%' -UseWebLogin; ^
+            Get-PnPFile -Url '%scriptPath%' -Path '%TEMP%' -Filename 'InitialiseVSCodeFolders_Enhanced.ps1' -AsFile; ^
+        } else { ^
+            Write-Host 'PnP PowerShell not available, trying basic web request...'; ^
+            $fallbackUrl = '%siteUrl%/%scriptPath%'; ^
+            Invoke-WebRequest -Uri $fallbackUrl -OutFile '%localScript%' -UseDefaultCredentials; ^
+        } ^
+    } catch { ^
+        Write-Host 'All download methods failed: ' + $_.Exception.Message; ^
+        exit 1; ^
+    } ^
 }"
 
 REM Execute the downloaded script
