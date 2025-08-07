@@ -3,7 +3,7 @@ REM VS Code Setup with GitHub Download
 REM No authentication required - uses public GitHub repository
 
 set "githubRepo=https://raw.githubusercontent.com/SupportPartners/GPO-logon-scripts/main"
-set "scriptName=InitialiseVSCodeFolders_Enhanced.ps1"
+set "scriptName=InitialiseVSCodeFolders_Enhanced_v3.0.ps1"
 set "localScript=%TEMP%\%scriptName%"
 set "logFile=%TEMP%\VSCodeSetup_Download.log"
 
